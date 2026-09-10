@@ -36,9 +36,21 @@ def et_now():
 
 
 def get_sp500_tickers():
-    """Scrape the current S&P 500 constituent list from Wikipedia."""
+    """Scrape the current S&P 500 constituent list from Wikipedia.
+
+    Wikipedia's edge (Wikimedia) rejects requests with no/blank User-Agent
+    with a 403, which is what pd.read_html(url) sends under the hood — so
+    fetch the page ourselves with a real User-Agent and hand the HTML to
+    pandas instead of the URL.
+    """
     url = "https://en.wikipedia.org/wiki/List_of_S%26P_500_companies"
-    tables = pd.read_html(url)
+    headers = {
+        "User-Agent": "no-risk-no-rari-scanner/1.0 "
+                      "(+https://github.com/Bullishhaf/no-risk-no-rari-scanner)"
+    }
+    resp = requests.get(url, headers=headers, timeout=30)
+    resp.raise_for_status()
+    tables = pd.read_html(resp.text)
     df = tables[0]
     tickers = df["Symbol"].astype(str).str.strip().str.replace(".", "-", regex=False).tolist()
     names = dict(zip(tickers, df["Security"].astype(str).tolist()))
