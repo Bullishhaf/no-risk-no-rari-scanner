@@ -312,12 +312,15 @@ def main():
         sys.exit(1)
 
     now = et_now()
-    if now.weekday() >= 5:
+    force = os.environ.get("FORCE_RUN", "").lower() in ("1", "true", "yes")
+    if not force and now.weekday() >= 5:
         print("Weekend — skipping.")
         return
-    if now.hour < 9 or (now.hour == 9 and now.minute < 30) or now.hour >= 16:
+    if not force and (now.hour < 9 or (now.hour == 9 and now.minute < 30) or now.hour >= 16):
         print(f"Outside market hours ({now.strftime('%H:%M')} ET) — skipping.")
         return
+    if force:
+        print(f"FORCE_RUN set — bypassing weekday/market-hours check ({now.strftime('%a %H:%M')} ET).")
 
     today = now.strftime("%Y-%m-%d")
     state = load_state(today)
