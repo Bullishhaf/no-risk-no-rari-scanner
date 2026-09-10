@@ -1,0 +1,96 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>No Risk No Rari Scanner</title>
+<style>
+:root {{
+  --bg: #090c12; --panel: #0d131e; --panel-2: #0f1622; --border: #1c2636; --border-soft: #151d2b;
+  --text: #c6d0dd; --text-bright: #eef3f9; --text-dim: #5c6b80;
+  --amber: #f2b542; --green: #35d99a; --green-soft: rgba(53,217,154,0.10);
+  --pink: #ff5f9e; --red: #ff6b6b; --cyan: #4fd2e3;
+  --font: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}}
+* {{ box-sizing: border-box; }}
+body {{ background: var(--bg); color: var(--text); font-family: var(--font); margin: 0; padding: 28px; }}
+.wrap {{ max-width: 1120px; margin: 0 auto; display: flex; flex-direction: column; gap: 22px; }}
+.header {{ display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; border-bottom: 1px solid var(--border); padding-bottom: 16px; }}
+.brand-title {{ font-size: 22px; font-weight: 700; letter-spacing: 0.06em; color: var(--amber); margin: 0; }}
+.brand-sub {{ margin-top: 4px; font-size: 12px; color: var(--text-dim); letter-spacing: 0.03em; }}
+.header-right {{ text-align: right; font-size: 12px; color: var(--text-dim); display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }}
+.pill {{ display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; padding: 3px 10px; border-radius: 3px; border: 1px solid transparent; }}
+.pill-open {{ color: var(--green); border-color: var(--green); background: var(--green-soft); }}
+.pill-closed {{ color: var(--text-dim); border-color: var(--border); background: var(--panel-2); }}
+.section {{ background: var(--panel); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }}
+.section-head {{ display: flex; justify-content: space-between; align-items: baseline; padding: 12px 16px; border-bottom: 1px solid var(--border); }}
+.section-title {{ font-size: 13px; font-weight: 700; letter-spacing: 0.08em; }}
+.section-title.call {{ color: var(--green); }}
+.section-title.put {{ color: var(--pink); }}
+.section-note {{ font-size: 11px; color: var(--text-dim); }}
+table {{ width: 100%; border-collapse: collapse; font-size: 12.5px; font-variant-numeric: tabular-nums; }}
+thead th {{ text-align: right; font-weight: 600; color: var(--text-dim); font-size: 10.5px; letter-spacing: 0.06em; padding: 8px 12px; border-bottom: 1px solid var(--border); white-space: nowrap; }}
+thead th:first-child, thead th:nth-child(2) {{ text-align: left; }}
+tbody td {{ padding: 7px 12px; border-bottom: 1px solid var(--border-soft); white-space: nowrap; }}
+tbody tr:last-child td {{ border-bottom: none; }}
+td.num {{ text-align: right; }}
+td.tkr {{ font-weight: 700; letter-spacing: 0.02em; }}
+td.tkr.call {{ color: var(--green); }}
+td.tkr.put {{ color: var(--pink); }}
+td.company {{ color: var(--text-dim); max-width: 200px; overflow: hidden; text-overflow: ellipsis; }}
+td.dim {{ color: var(--text-dim); }}
+td.dots {{ text-align: right; letter-spacing: 2px; color: var(--cyan); font-size: 10px; }}
+td.time {{ font-size: 11px; }}
+.pos {{ color: var(--green); }}
+.neg {{ color: var(--red); }}
+.flat {{ color: var(--text-dim); }}
+.footer {{ border-top: 1px solid var(--border); padding-top: 14px; font-size: 11px; color: var(--text-dim); line-height: 1.7; }}
+.footer b {{ color: var(--text); }}
+.key-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap: 4px 24px; margin-bottom: 10px; }}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <div>
+      <p class="brand-title">NO RISK NO RARI</p>
+      <p class="brand-sub">S&amp;P 500 intraday movers &middot; NYSE cash session</p>
+    </div>
+    <div class="header-right">
+      <span class="pill {pill_class}">MARKET {pill_text}</span>
+      <span>AS OF <b style="color:var(--text)">{as_of}</b></span>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-head">
+      <span class="section-title call">CALL CANDIDATES &mdash; STRONGEST MOVERS</span>
+      <span class="section-note">top {n_calls} of {universe_size} scanned</span>
+    </div>
+    <table>
+      <thead><tr><th>TICKER</th><th>COMPANY</th><th>PRICE</th><th>DAY%</th><th>VOLUME</th><th>IRS</th><th>WRS</th><th>20D</th><th>LIQ</th><th>SINCE 1ST</th><th>1ST SEEN</th></tr></thead>
+      <tbody>{calls_rows}</tbody>
+    </table>
+  </div>
+  <div class="section">
+    <div class="section-head">
+      <span class="section-title put">PUT CANDIDATES &mdash; WEAKEST MOVERS</span>
+      <span class="section-note">top {n_puts} of {universe_size} scanned</span>
+    </div>
+    <table>
+      <thead><tr><th>TICKER</th><th>COMPANY</th><th>PRICE</th><th>DAY%</th><th>VOLUME</th><th>IRS</th><th>WRS</th><th>20D</th><th>LIQ</th><th>SINCE 1ST</th><th>1ST SEEN</th></tr></thead>
+      <tbody>{puts_rows}</tbody>
+    </table>
+  </div>
+  <div class="footer">
+    <div class="key-grid">
+      <span><b>DAY%</b> &mdash; move vs. prior close</span>
+      <span><b>IRS</b> &mdash; today's move, ranked 0&ndash;99 against the S&amp;P 500</span>
+      <span><b>WRS</b> &mdash; this week's (5-day) move, ranked 0&ndash;99</span>
+      <span><b>20D</b> &mdash; past-month (20-day) move, ranked 0&ndash;99</span>
+      <span><b>LIQ</b> &mdash; dollar-volume tier: &#9679;&#9679;&#9679; $200M+/day &nbsp; &#9679;&#9679;&#9675; $20&ndash;200M &nbsp; &#9679;&#9675;&#9675; under $20M</span>
+      <span><b>SINCE 1ST</b> &mdash; price change since this name first entered today's scan</span>
+    </div>
+    <div>Universe: S&amp;P 500, filtered to price &ge; $5 and volume &ge; 300K. Data via Yahoo Finance, delayed per source, informational only &mdash; not investment advice.</div>
+  </div>
+</div>
+</body>
+</html>
