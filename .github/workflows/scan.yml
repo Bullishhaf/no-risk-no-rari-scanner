@@ -1,0 +1,45 @@
+name: No Risk No Rari Scanner
+
+on:
+  schedule:
+    # Every 15 min, 13:00-21:00 UTC, Mon-Fri.
+    # That window covers 9:30am-4:00pm ET whether it's EDT or EST —
+    # scan.py itself checks the real ET clock and skips outside
+    # 9:30am-4:00pm ET, so DST changes don't need any edits here.
+    - cron: "*/15 13-21 * * 1-5"
+  workflow_dispatch: {}   # lets you click "Run workflow" manually to test
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          playwright install --with-deps chromium
+
+      - name: Restore today's state
+        uses: actions/cache@v4
+        with:
+          path: state.json
+          key: scanner-state-${{ github.run_id }}
+          restore-keys: |
+            scanner-state-
+
+      - name: Run scan and post to Discord
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: python scan.py
+
+      - name: Save state for next run
+        uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: state.json
+          key: scanner-state-${{ github.run_id }}
